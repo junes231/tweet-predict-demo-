@@ -78,7 +78,7 @@ export default function Home() {
           </div>
 
           <div style={{ marginTop: 16 }}>
-            <h4>Cumulative Engagement (simulated)</h4>
+            <h4>Cumulative Engagement</h4>
             <ClientChart data={resData.chartData} />
           </div>
         </div>
