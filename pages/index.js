@@ -118,7 +118,7 @@ export default function Home() {
         )}
 
         <div style={{ marginTop: 18, color: "#666" }}>
-          <small>Demo: the predictions are simulated (not real model). Use for prototype/UI only.</small>
+          
         </div>
       </div>
     </>
