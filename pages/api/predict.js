@@ -63,16 +63,49 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("predict api error:", err);
     // fallback safe response
-    return res.status(200).json({
-      a: { likes: 50, retweets: 15, comments: 5, quotes: 2, confidence: 0.5 },
-      b: { likes: 40, retweets: 12, comments: 4, quotes: 1, confidence: 0.45 },
-      chartData: {
-        labels: Array.from({ length: 24 }, (_, i) => `${i}h`),
-        datasets: [
-          { label: "Tweet A", data: Array.from({ length: 24 }, () => Math.floor(Math.random()*5)), borderColor: "rgb(75,192,192)" },
-          { label: "Tweet B", data: Array.from({ length: 24 }, () => Math.floor(Math.random()*4)), borderColor: "rgb(255,99,132)" }
-        ]
-      }
+    // pages/api/predict.js
+export default async function handler(req, res) {
+  try {
+    const { tweetA, tweetB } = req.body;
+
+    if (!tweetA || !tweetB) {
+      return res.status(400).json({ error: 'Missing tweets' });
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // 也可用 gpt-4o
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert social media analyst. Predict engagement for two tweets."
+          },
+          {
+            role: "user",
+            content: `Predict the number of likes, retweets, and comments each tweet will get in the first 24 hours.\n\nTweet A: "${tweetA}"\nTweet B: "${tweetB}"\nRespond in JSON format: {"A": {"likes": ..., "retweets": ..., "comments": ..., "confidence": ...}, "B": {...}}`
+          }
+        ],
+        temperature: 0.3
+      })
     });
+
+    const data = await response.json();
+
+    let prediction;
+    try {
+      prediction = JSON.parse(data.choices[0].message.content);
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to parse AI response", raw: data });
+    }
+
+    res.status(200).json(prediction);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 }
